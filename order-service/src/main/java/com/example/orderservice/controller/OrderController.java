@@ -21,15 +21,15 @@ public class OrderController {
     @GetMapping("/order")
     @CircuitBreaker(name = "productServiceCB", fallbackMethod = "fallbackMethod")
     @Retry(name = "productServiceRetry")
-    @RateLimiter(name = "productServiceRateLimiter")
-    @TimeLimiter(name = "productServiceTimeLimiter")
-    public CompletableFuture<String> placeOrder() {
-        return CompletableFuture.supplyAsync(() ->
-                restTemplate.getForObject("http://localhost:8081/product", String.class)
-        );
+    @RateLimiter(name = "productServiceRateLimiter", fallbackMethod = "fallbackMethod")
+    public String placeOrder() {
+        System.out.println(">>> Calling product service...");
+        return restTemplate.getForObject("http://localhost:8081/product", String.class);
     }
 
-    public CompletableFuture<String> fallbackMethod(Throwable t) {
-        return CompletableFuture.supplyAsync(() -> "Fallback: Product service is unavailable.");
+    public String fallbackMethod(Throwable t) {
+        System.out.println(">>> RateLimiter fallback triggered: " + t.getMessage());
+        return "Fallback: Product service is unavailable.";
     }
+
 }
